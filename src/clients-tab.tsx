@@ -185,12 +185,10 @@ function ClientDetail({
     <div style={s.detailOuter}>
       {/* Fixed header */}
       <div style={s.detailFixedHeader}>
-        <div style={s.backRow}>
-          <button style={s.backButton} onClick={onBack}>
-            <span style={{ marginRight: "4px" }}>&larr;</span> Back to all clients
-          </button>
-        </div>
         <div style={s.detailHeader}>
+          <button style={s.chevronBack} onClick={onBack} title="Back to all clients">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><path d="M10 12 6 8l4-4"/></svg>
+          </button>
           <h2 style={s.heading}>{client.name}</h2>
           <StatusBadge status={client.status} />
         </div>
@@ -240,7 +238,7 @@ function ProfileSection({ profile }: { profile: Record<string, any> }) {
   const isEmpty = Object.keys(profile).length === 0;
 
   return (
-    <Section title="Profile">
+    <Section>
       {isEmpty ? (
         <div style={s.sectionEmpty}>
           No profile yet. Emma will fill this in as she processes documents.
@@ -334,7 +332,7 @@ function ChecklistSection({ items }: { items: ReviewItem[] }) {
   const total = items.length;
 
   return (
-    <Section title="Document checklist">
+    <Section>
       {total === 0 ? (
         <div style={s.sectionEmpty}>
           No checklist yet. Upload documents and ask Emma to process them.
@@ -402,7 +400,7 @@ function QuestionsSection({ items }: { items: ReviewItem[] }) {
   const unresolved = items.filter((i) => !i.resolved).length;
 
   return (
-    <Section title="Questions">
+    <Section>
       {items.length === 0 ? (
         <div style={s.sectionEmpty}>No questions yet.</div>
       ) : (
@@ -509,13 +507,8 @@ function PriorityBadge({ priority }: { priority: string }) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={s.section}>
-      <h3 style={s.sectionTitle}>{title}</h3>
-      {children}
-    </div>
-  );
+function Section({ children }: { children: React.ReactNode }) {
+  return <div style={s.section}>{children}</div>;
 }
 
 // --- Helpers ---
@@ -573,7 +566,7 @@ function ClientFilesSection({
 
   if (files.length === 0) {
     return (
-      <Section title="Files">
+      <Section>
         <div style={s.sectionEmpty}>
           No files yet. Upload documents in the Emma chat using the attachment button.
         </div>
@@ -582,7 +575,7 @@ function ClientFilesSection({
   }
 
   return (
-    <Section title="Files">
+    <Section>
       <div style={{ display: "flex", flexDirection: "column" as const, gap: "2px" }}>
         {files.map((f) => (
           <div key={f.path} style={s.fileRow}>
@@ -726,35 +719,28 @@ const s: Record<string, React.CSSProperties> = {
   tdBold: { padding: "10px 14px", color: "#0d0d0d", fontWeight: 500 },
 
   // Detail header
-  backRow: { marginBottom: "16px" },
-  backButton: {
+  chevronBack: {
     background: "none",
     border: "none",
-    color: "#676767",
-    fontSize: "13px",
+    color: "#9b9b9b",
     cursor: "pointer",
-    padding: "4px 0",
-    fontFamily: FONT,
+    padding: "4px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "6px",
+    transition: "color 0.15s, background 0.15s",
+    flexShrink: 0,
   },
   detailHeader: {
     display: "flex",
     alignItems: "center",
-    gap: "12px",
-    marginBottom: "28px",
+    gap: "8px",
   },
 
   // Section
   section: {
-    borderRadius: "12px",
-    border: "1px solid rgba(13,13,13,0.05)",
-    padding: "20px",
-    background: "#ffffff",
-  },
-  sectionTitle: {
-    fontSize: "14px",
-    fontWeight: 600,
-    color: "#0d0d0d",
-    margin: "0 0 14px 0",
+    padding: 0,
   },
   sectionEmpty: {
     fontSize: "13px",
