@@ -1,0 +1,16 @@
+{
+  "id": "taxprep-agent",
+  "name": "Tax Prep Agent",
+  "description": "Manage tax preparation clients, documents, and filings",
+  "icon": "Receipt",
+  "category": "business",
+  "author": "Houston",
+  "tags": ["tax", "accounting", "business"],
+  "tabs": [
+    { "id": "chat", "label": "Chat", "builtIn": "chat" },
+    { "id": "clients", "label": "Clients", "customComponent": "ClientsTab" },
+    { "id": "documents", "label": "Documents", "customComponent": "DocumentsTab" },
+    { "id": "files", "label": "Files", "builtIn": "files" }
+  ],
+  "defaultTab": "clients"
+}
