@@ -7,13 +7,21 @@ export interface Client {
   tax_year: number;
 }
 
-export interface TaxDocument {
+export interface ReviewItem {
   id: string;
-  client_id: string;
-  type: "W2" | "1099" | "1040" | "receipt" | "statement" | "other";
-  name: string;
-  status: "pending" | "received" | "reviewed" | "filed";
-  notes?: string;
+  category:
+    | "checklist-item"
+    | "missing-document"
+    | "carryover"
+    | "needs-info"
+    | "discrepancy"
+    | "client-request"
+    | "informational";
+  title: string;
+  description?: string;
+  priority: "high" | "medium" | "low";
+  resolved: boolean;
+  action?: string | null;
 }
 
 export interface CustomTabProps {

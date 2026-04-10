@@ -1,20 +1,18 @@
 {
   "id": "taxprep-agent",
   "name": "Tax Prep Agent",
-  "description": "Manage tax preparation clients, documents, and filings",
+  "description": "AI tax workpaper assistant that organizes documents and prepares returns",
   "icon": "Receipt",
   "category": "business",
   "author": "Houston",
   "tags": ["tax", "accounting", "business"],
   "tabs": [
-    { "id": "chat", "label": "Chat", "builtIn": "chat" },
+    { "id": "chat", "label": "Emma", "builtIn": "chat" },
     { "id": "clients", "label": "Clients", "customComponent": "ClientsTab" },
-    { "id": "documents", "label": "Documents", "customComponent": "DocumentsTab" },
     { "id": "files", "label": "Files", "builtIn": "files" }
   ],
   "defaultTab": "clients",
   "agentSeeds": {
-    ".houston/data/clients.json": "[]",
-    ".houston/data/documents.json": "[]"
+    ".houston/data/clients.json": "[]"
   }
 }
