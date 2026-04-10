@@ -12,5 +12,9 @@
     { "id": "documents", "label": "Documents", "customComponent": "DocumentsTab" },
     { "id": "files", "label": "Files", "builtIn": "files" }
   ],
-  "defaultTab": "clients"
+  "defaultTab": "clients",
+  "agentSeeds": {
+    ".houston/data/clients.json": "[]",
+    ".houston/data/documents.json": "[]"
+  }
 }
