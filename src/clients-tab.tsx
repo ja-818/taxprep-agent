@@ -95,16 +95,22 @@ export function ClientsTab(props: CustomTabProps) {
   return <ClientList clients={clients} onSelect={(id) => setSelectedId(id)} />;
 }
 
+// --- Shared Empty State ---
+
+function EmptyState({ title, description }: { title: string; description: string }) {
+  return (
+    <div style={s.empty}>
+      <div style={s.emptyTitle}>{title}</div>
+      <div style={s.emptyDesc}>{description}</div>
+    </div>
+  );
+}
+
 // --- Client List View ---
 
 function ClientList({ clients, onSelect }: { clients: Client[]; onSelect: (id: string) => void }) {
   if (clients.length === 0) {
-    return (
-      <div style={s.empty}>
-        <div style={s.emptyTitle}>No clients yet</div>
-        <div style={s.emptyDesc}>Ask Emma to create a new client.</div>
-      </div>
-    );
+    return <EmptyState title="No clients yet" description="Ask Emma to create a new client." />;
   }
 
   return (
@@ -240,9 +246,7 @@ function ProfileSection({ profile }: { profile: Record<string, any> }) {
   return (
     <Section>
       {isEmpty ? (
-        <div style={s.sectionEmpty}>
-          No profile yet. Emma will fill this in as she processes documents.
-        </div>
+        <EmptyState title="No profile yet" description="Emma will fill this in as she processes documents." />
       ) : (
         <div style={s.profileGrid}>
           <RenderFields data={profile} depth={0} />
@@ -334,9 +338,7 @@ function ChecklistSection({ items }: { items: ReviewItem[] }) {
   return (
     <Section>
       {total === 0 ? (
-        <div style={s.sectionEmpty}>
-          No checklist yet. Upload documents and ask Emma to process them.
-        </div>
+        <EmptyState title="No checklist yet" description="Upload documents and ask Emma to process them." />
       ) : (
         <>
           <ProgressBar resolved={resolved} total={total} />
@@ -402,7 +404,7 @@ function QuestionsSection({ items }: { items: ReviewItem[] }) {
   return (
     <Section>
       {items.length === 0 ? (
-        <div style={s.sectionEmpty}>No questions yet.</div>
+        <EmptyState title="No questions yet" description="When Emma needs information from the client, questions will appear here." />
       ) : (
         <>
           <div style={s.questionCount}>
@@ -565,13 +567,7 @@ function ClientFilesSection({
   if (loading) return <div style={s.sectionEmpty}>Loading files...</div>;
 
   if (files.length === 0) {
-    return (
-      <Section>
-        <div style={s.sectionEmpty}>
-          No files yet. Upload documents in the Emma chat using the attachment button.
-        </div>
-      </Section>
-    );
+    return <EmptyState title="No files yet" description="Upload documents in the Emma chat using the attachment button." />;
   }
 
   return (
@@ -670,20 +666,21 @@ const s: Record<string, React.CSSProperties> = {
   fileName: { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const },
   empty: {
     display: "flex",
-    flexDirection: "column",
+    flexDirection: "column" as const,
     alignItems: "center",
     justifyContent: "center",
-    height: "100%",
-    minHeight: "300px",
-    gap: "8px",
+    flex: 1,
+    minHeight: "240px",
+    gap: "6px",
     fontFamily: FONT,
+    padding: "40px 20px",
   },
-  emptyTitle: { fontSize: "18px", fontWeight: 600, color: "#0d0d0d" },
+  emptyTitle: { fontSize: "16px", fontWeight: 600, color: "#0d0d0d", textAlign: "center" as const },
   emptyDesc: {
     fontSize: "14px",
-    color: "#676767",
-    maxWidth: "400px",
-    textAlign: "center",
+    color: "#9b9b9b",
+    maxWidth: "360px",
+    textAlign: "center" as const,
     lineHeight: 1.5,
   },
 
