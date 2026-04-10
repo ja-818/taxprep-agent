@@ -86,6 +86,7 @@ export function ClientsTab(props: CustomTabProps) {
       <ClientDetail
         client={selectedClient}
         readFile={props.readFile}
+        listFiles={props.listFiles}
         onBack={() => setSelectedId(null)}
       />
     );
@@ -144,15 +145,28 @@ function ClientList({ clients, onSelect }: { clients: Client[]; onSelect: (id: s
 
 // --- Client Detail View ---
 
+type DetailTab = "profile" | "checklist" | "questions" | "files";
+
+const DETAIL_TABS: { id: DetailTab; label: string }[] = [
+  { id: "profile", label: "Profile" },
+  { id: "checklist", label: "Checklist" },
+  { id: "questions", label: "Questions" },
+  { id: "files", label: "Files" },
+];
+
 function ClientDetail({
   client,
   readFile,
+  listFiles,
   onBack,
 }: {
   client: Client;
   readFile: CustomTabProps["readFile"];
+  listFiles: CustomTabProps["listFiles"];
   onBack: () => void;
 }) {
+  const [tab, setTab] = useState<DetailTab>("profile");
+
   const profile = usePolledData<Record<string, any>>(
     readFile,
     `clients/${client.id}/profile.json`,
@@ -168,20 +182,53 @@ function ClientDetail({
   const questionItems = reviewItems.filter((r) => QUESTION_CATEGORIES.includes(r.category));
 
   return (
-    <div style={s.container}>
-      <div style={s.backRow}>
-        <button style={s.backButton} onClick={onBack}>
-          <span style={{ marginRight: "4px" }}>&larr;</span> Back to all clients
-        </button>
+    <div style={s.detailOuter}>
+      {/* Fixed header */}
+      <div style={s.detailFixedHeader}>
+        <div style={s.backRow}>
+          <button style={s.backButton} onClick={onBack}>
+            <span style={{ marginRight: "4px" }}>&larr;</span> Back to all clients
+          </button>
+        </div>
+        <div style={s.detailHeader}>
+          <h2 style={s.heading}>{client.name}</h2>
+          <StatusBadge status={client.status} />
+        </div>
+        {/* Tab bar */}
+        <div style={s.tabBar}>
+          {DETAIL_TABS.map((t) => {
+            const isActive = tab === t.id;
+            const count =
+              t.id === "checklist" ? checklistItems.filter((i) => !i.resolved).length :
+              t.id === "questions" ? questionItems.filter((i) => !i.resolved).length :
+              undefined;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                style={{
+                  ...s.tabButton,
+                  ...(isActive ? s.tabButtonActive : {}),
+                }}
+              >
+                {t.label}
+                {count !== undefined && count > 0 && (
+                  <span style={s.tabCount}>{count}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
-      <div style={s.detailHeader}>
-        <h2 style={s.heading}>{client.name}</h2>
-        <StatusBadge status={client.status} />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column" as const, gap: "28px" }}>
-        <ProfileSection profile={profile} />
-        <ChecklistSection items={checklistItems} />
-        <QuestionsSection items={questionItems} />
+
+      {/* Scrollable content */}
+      <div style={s.detailScrollArea}>
+        <div style={s.detailContent}>
+          {tab === "profile" && <ProfileSection profile={profile} />}
+          {tab === "checklist" && <ChecklistSection items={checklistItems} />}
+          {tab === "questions" && <QuestionsSection items={questionItems} />}
+          {tab === "files" && <ClientFilesSection clientId={client.id} readFile={readFile} listFiles={listFiles} />}
+        </div>
       </div>
     </div>
   );
@@ -485,6 +532,69 @@ function formatValue(value: any): string {
   return String(value);
 }
 
+// --- Client Files Section ---
+
+function ClientFilesSection({
+  clientId,
+  readFile,
+  listFiles,
+}: {
+  clientId: string;
+  readFile: CustomTabProps["readFile"];
+  listFiles: CustomTabProps["listFiles"];
+}) {
+  const [files, setFiles] = useState<Array<{ path: string; name: string }>>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const load = () => {
+      listFiles()
+        .then((all) => {
+          if (!active) return;
+          const prefix = `clients/${clientId}/`;
+          const clientFiles = all
+            .filter((f) => f.path.includes(prefix) && !f.name.startsWith("."))
+            .map((f) => ({
+              ...f,
+              name: f.path.split(prefix).pop() || f.name,
+            }));
+          setFiles(clientFiles);
+        })
+        .catch(() => { if (active) setFiles([]); })
+        .finally(() => { if (active) setLoading(false); });
+    };
+    load();
+    const id = setInterval(load, 3000);
+    return () => { active = false; clearInterval(id); };
+  }, [clientId, listFiles]);
+
+  if (loading) return <div style={s.sectionEmpty}>Loading files...</div>;
+
+  if (files.length === 0) {
+    return (
+      <Section title="Files">
+        <div style={s.sectionEmpty}>
+          No files yet. Upload documents in the Emma chat using the attachment button.
+        </div>
+      </Section>
+    );
+  }
+
+  return (
+    <Section title="Files">
+      <div style={{ display: "flex", flexDirection: "column" as const, gap: "2px" }}>
+        {files.map((f) => (
+          <div key={f.path} style={s.fileRow}>
+            <span style={s.fileIcon}>📄</span>
+            <span style={s.fileName}>{f.name}</span>
+          </div>
+        ))}
+      </div>
+    </Section>
+  );
+}
+
 // --- Styles ---
 
 const s: Record<string, React.CSSProperties> = {
@@ -493,6 +603,78 @@ const s: Record<string, React.CSSProperties> = {
     fontFamily: FONT,
     maxWidth: "860px",
   },
+
+  // Detail layout — fixed header + scrollable body
+  detailOuter: {
+    display: "flex",
+    flexDirection: "column" as const,
+    height: "100%",
+    fontFamily: FONT,
+  },
+  detailFixedHeader: {
+    flexShrink: 0,
+    padding: "20px 28px 0",
+    maxWidth: "860px",
+  },
+  detailScrollArea: {
+    flex: 1,
+    overflowY: "auto" as const,
+    minHeight: 0,
+  },
+  detailContent: {
+    padding: "20px 28px 40px",
+    maxWidth: "860px",
+  },
+
+  // Tab bar
+  tabBar: {
+    display: "flex",
+    gap: "0",
+    borderBottom: "1px solid rgba(13,13,13,0.05)",
+    marginTop: "16px",
+  },
+  tabButton: {
+    padding: "10px 16px",
+    fontSize: "13px",
+    color: "#9b9b9b",
+    background: "none",
+    border: "none",
+    borderBottom: "2px solid transparent",
+    cursor: "pointer",
+    marginBottom: "-1px",
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    transition: "color 0.15s",
+    fontFamily: FONT,
+  } as React.CSSProperties,
+  tabButtonActive: {
+    color: "#0d0d0d",
+    fontWeight: 500,
+    borderBottomColor: "#0d0d0d",
+  },
+  tabCount: {
+    fontSize: "11px",
+    background: "rgba(224,46,42,0.1)",
+    color: "#e02e2a",
+    padding: "1px 6px",
+    borderRadius: "9999px",
+    fontWeight: 600,
+  },
+
+  // File rows
+  fileRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "8px 12px",
+    borderRadius: "8px",
+    fontSize: "13px",
+    color: "#424242",
+    cursor: "default",
+  },
+  fileIcon: { fontSize: "14px", flexShrink: 0 },
+  fileName: { flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const },
   empty: {
     display: "flex",
     flexDirection: "column",
